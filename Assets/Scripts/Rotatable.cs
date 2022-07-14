@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 public class Rotatable : MonoBehaviour {
+
+    public event Action<bool> statusChanged;
 
     public int correctAngle ;
     bool isCorrect;
@@ -41,7 +43,7 @@ public class Rotatable : MonoBehaviour {
                 transform.rotation = Quaternion.Lerp(transform.rotation,  newRotation, 1f * Time.deltaTime);
                 */
                 gameObject.transform.Rotate(0, 0, 45);
-                GameManager.instance.PlayRotateSound();
+                SoundManager.instance.PlayRotationSfx();
                 //int x = (int)gameObject.transform.rotation.eulerAngles.z;
                 int x = Mathf.RoundToInt(gameObject.transform.rotation.eulerAngles.z);
                 
@@ -61,7 +63,7 @@ public class Rotatable : MonoBehaviour {
 
     }
 
-    public bool CheckStatus ()
+    public bool IsCorrect ()
     {
         return isCorrect;
     }
@@ -69,7 +71,7 @@ public class Rotatable : MonoBehaviour {
     void UpdateStatus (bool status)
     {
         isCorrect = status;
-        GameManager.instance.ObjectChanged(CheckStatus());
+        statusChanged?.Invoke(status);
     }
 
 }

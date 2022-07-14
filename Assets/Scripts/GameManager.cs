@@ -5,79 +5,46 @@ using System.Linq;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class GameManager : MonoBehaviour
+public class GameManager : Singleton<GameManager>
 {
 
-    public static GameManager instance;
     int correctItems = 0;
     int totalItems = 0;
     GameObject level;
     bool initialized = false;
-    public Text levelText;
     List<GameLevel> levels = new List<GameLevel>();
     int currentLevel = 0;
     bool isPlaying = false;
     float totalPlayTime = 0f;
 
-    private AudioSource rotateSound;
-
 
     // Use this for initialization
-    void Awake()
+    void Start()
     {
 
-        if (instance == null)
-            instance = this;
-        else if (instance != this)
-            Destroy(gameObject);
+        PrepareLevelsData();
+        InitializeGame(SceneManager.GetActiveScene(), LoadSceneMode.Single);
+        SceneManager.sceneLoaded += InitializeGame;
 
-        DontDestroyOnLoad(gameObject);
-
-        GameLevel eightLevel = new GameLevel(0, "Eight", "Tap to rotate, until it's eight", "Drink water ;)");
-        GameLevel noteLevel = new GameLevel(1, "Note", "A note can be more than a piece of paper", "Appreciate different tastes");
-        GameLevel tvLevel = new GameLevel(4, "TV", "We watch it all day", "I'm afraid this is the end of our journey.\n more levels to come later");
-        GameLevel stickmanLevel = new GameLevel(2, "Stickman", "It could be me or it could be you, just made of sticks", "Things don't have to be complicated to be helpful");
-        GameLevel doorLevel = new GameLevel(3, "Door", "I wonder what's behind?", "Don't be afraid to open new doors");
-
-
-        levels.Add(eightLevel);
-        levels.Add(noteLevel);
-        levels.Add(stickmanLevel);
-        levels.Add(doorLevel);
-        levels.Add(tvLevel);
-
-        List<AudioSource> sounds = GetComponents<AudioSource>().ToList<AudioSource>();
-        foreach (AudioSource a in sounds)
-        {
-            
-            if (a.clip.name == "LineRotate")
-                rotateSound = a;
-        }
-        
 
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-
-        if (initialized == false)
-        {
-            InitializeGame();
-            initialized = true;
-            isPlaying = true;
-            totalPlayTime = 0f;
-        }
-
         if (isPlaying)
         {
             totalPlayTime += Time.fixedDeltaTime;
         }
     }
 
-    void InitializeGame()
+    void InitializeGame(Scene loadedScene, LoadSceneMode mode)
     {
-        levelText.text = levels[currentLevel].question;
+        initialized = true;
+        isPlaying = true;
+        totalPlayTime = 0f;
+
+        UIManager.instance.UpdateLevelHint(levels[currentLevel].question);
         totalItems = 0;
         level = GameObject.FindGameObjectWithTag("LevelObject");
         foreach (Transform ts in level.transform)
@@ -93,21 +60,24 @@ public class GameManager : MonoBehaviour
             {
 
                 Rotatable r = ts.gameObject.GetComponent<Rotatable>();
-                if(r!=null)
+                if (r != null)
                 {
-                    if (r.CheckStatus())
+                    r.statusChanged += ObjectChanged;
+                    if (r.IsCorrect())
                         correctItems++;
                 }
                 else
                 {
                     RotatableBend r2 = ts.gameObject.GetComponent<RotatableBend>();
-                    if (r2.CheckStatus())
+                    r2.statusChanged += ObjectChanged;
+
+                    if (r2.IsCorrect())
                         correctItems++;
-                }                
-            }            
+                }
+            }
         }
 
-        
+
     }
 
     public void ObjectChanged(bool isCorrect)
@@ -125,10 +95,10 @@ public class GameManager : MonoBehaviour
         {
 
             string winningText = "Well done, that took you \n" + totalPlayTime.ToString("F1") + " Seconds\n\n\n";
-            levelText.text = winningText + "\"" +levels[currentLevel].message + "\"";
+            UIManager.instance.UpdateLevelHint(winningText + "\"" + levels[currentLevel].message + "\"");
             currentLevel++;
             isPlaying = false;
-            Invoke("ChangeScene", 5f);            
+            Invoke("ChangeScene", 5f);
         }
 
     }
@@ -147,9 +117,22 @@ public class GameManager : MonoBehaviour
 
     }
 
-    public void PlayRotateSound()
+
+
+    private void PrepareLevelsData()
     {
-        rotateSound.Play();
+        GameLevel eightLevel = new GameLevel(0, "Eight", "Tap to rotate, until it's eight", "Drink water ;)");
+        GameLevel noteLevel = new GameLevel(1, "Note", "A note can be more than a piece of paper", "Appreciate different tastes");
+        GameLevel tvLevel = new GameLevel(4, "TV", "We watch it all day", "I'm afraid this is the end of our journey.\n more levels to come later");
+        GameLevel stickmanLevel = new GameLevel(2, "Stickman", "It could be me or it could be you, just made of sticks", "Things don't have to be complicated to be helpful");
+        GameLevel doorLevel = new GameLevel(3, "Door", "I wonder what's behind?", "Don't be afraid to open new doors");
+
+
+        levels.Add(eightLevel);
+        levels.Add(noteLevel);
+        levels.Add(stickmanLevel);
+        levels.Add(doorLevel);
+        levels.Add(tvLevel);
     }
 
     private class GameLevel
