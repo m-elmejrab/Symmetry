@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIManager : Singleton<UIManager>
+public class UIManager : Singleton<UIManager> //Class responsible for handling UI
 {
     [SerializeField] Text levelHint;
 
@@ -11,15 +11,5 @@ public class UIManager : Singleton<UIManager>
     {
         levelHint.text = hint;
     }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    
 }

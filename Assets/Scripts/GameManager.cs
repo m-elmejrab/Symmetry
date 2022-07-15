@@ -21,15 +21,11 @@ public class GameManager : Singleton<GameManager>
     // Use this for initialization
     void Start()
     {
-
         PrepareLevelsData();
         InitializeGame(SceneManager.GetActiveScene(), LoadSceneMode.Single);
         SceneManager.sceneLoaded += InitializeGame;
-
-
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
         if (isPlaying)
@@ -38,6 +34,9 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    /// <summary>
+    /// Initializes UI, subscribe to rotatable objects' events
+    /// </summary>
     void InitializeGame(Scene loadedScene, LoadSceneMode mode)
     {
         initialized = true;
@@ -56,9 +55,9 @@ public class GameManager : Singleton<GameManager>
 
         foreach (Transform ts in levelObjects)
         {
-            if (ts.tag != "LevelObject")
+            if (ts.tag != "LevelObject") //skip the container of rotatable objects
             {
-
+                //Subscribe to rotation events
                 Rotatable r = ts.gameObject.GetComponent<Rotatable>();
                 if (r != null)
                 {
@@ -80,6 +79,9 @@ public class GameManager : Singleton<GameManager>
 
     }
 
+    /// <summary>
+    /// Handles rotatable object status when rotated
+    /// </summary>
     public void ObjectChanged(bool isCorrect)
     {
         if (isCorrect)
@@ -93,7 +95,6 @@ public class GameManager : Singleton<GameManager>
 
         if (correctItems == totalItems)
         {
-
             string winningText = "Well done, that took you \n" + totalPlayTime.ToString("F1") + " Seconds\n\n\n";
             UIManager.instance.UpdateLevelHint(winningText + "\"" + levels[currentLevel].message + "\"");
             currentLevel++;
@@ -103,9 +104,11 @@ public class GameManager : Singleton<GameManager>
 
     }
 
+    /// <summary>
+    /// Loads the next level
+    /// </summary>
     void ChangeScene()
     {
-
         if (currentLevel < 5)
         {
             initialized = false;
@@ -114,11 +117,12 @@ public class GameManager : Singleton<GameManager>
             SceneManager.LoadScene(currentLevel);
         }
 
-
     }
 
 
-
+    /// <summary>
+    /// Creates level info and objects
+    /// </summary>
     private void PrepareLevelsData()
     {
         GameLevel eightLevel = new GameLevel(0, "Eight", "Tap to rotate, until it's eight", "Drink water ;)");
@@ -135,6 +139,9 @@ public class GameManager : Singleton<GameManager>
         levels.Add(tvLevel);
     }
 
+    /// <summary>
+    /// Helper class that serves as container for level data
+    /// </summary>
     private class GameLevel
     {
         public int index;
